@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Serif+SC:wght@400;700;900&family=Inter:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    @page { size: 794px 1123px; margin: 0; }
+    :root {
+      --c-bg: #111212;
+      --c-accent: #77bfe3;
+      --c-text: #edefef;
+      --c-muted: #93999c;
+      --c-footer: #6f7578;
+    }
+    html, body { margin: 0; padding: 0; width: 794px; height: 1123px; background: var(--c-bg); color: var(--c-text); font-family: 'Inter', 'Noto Sans SC', sans-serif; }
+    @media screen {
+      html { height: auto; display: flex; justify-content: center; min-height: 100vh; background: var(--c-bg); }
+      body { transform-origin: top center; scale: min(1, calc(100vw / 794), calc(100vh / 1123)); margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.3); }
+    }
+    .cover { width: 794px; height: 1123px; position: relative; box-sizing: border-box; }
+    .vline { position: absolute; left: 57px; top: 76px; bottom: 76px; width: 2.5px; background: var(--c-accent); }
+    .content { position: absolute; left: 101px; right: 76px; top: 0; bottom: 0; }
+    .label { position: absolute; top: 132px; font-size: 9pt; color: var(--c-accent); letter-spacing: 3px; text-transform: uppercase; font-family: 'Inter', 'Noto Sans SC', sans-serif; }
+    .title { position: absolute; top: 228px; font-size: 32pt; font-weight: 700; line-height: 1.3; font-family: 'Playfair Display', 'Noto Serif SC', serif; color: var(--c-text); max-width: 580px; }
+    .subtitle { position: absolute; top: 530px; font-size: 12pt; line-height: 1.5; color: var(--c-muted); max-width: 500px; }
+    .authors { position: absolute; top: 706px; font-size: 12pt; color: var(--c-text); }
+    .institution { position: absolute; top: 756px; font-size: 10pt; color: var(--c-muted); line-height: 1.4; max-width: 520px; }
+    .footer { position: absolute; bottom: 76px; left: 0; right: 0; display: flex; justify-content: space-between; font-size: 9pt; color: var(--c-footer); }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <div class="vline"></div>
+    <div class="content">
+      <div class="label">Technical Specification &middot; Research Draft &middot; v1.0</div>
+      <div class="title">DUOLITH-KEM:<br>A Dual-Wall Post-Quantum<br>Key Encapsulation Mechanism</div>
+      <div class="subtitle">Two independent lattice walls &mdash; a structured Module-LWE layer over the cyclotomic ring Z<sub>7681</sub>[X]/(X<sup>256</sup>+1) and an unstructured plain-LWE layer modulo 65536 &mdash; whose independently encapsulated secrets are combined with SHA-3 and lifted to IND-CCA2 security by the implicit-rejection Fujisaki-Okamoto transform. The shared secret stays protected whenever at least one wall holds.</div>
+      <div class="authors">DUOLITH-KEM Design Team</div>
+      <div class="institution">Security estimates computed with the Albrecht&ndash;Player&ndash;Samuels lattice estimator; correctness bounds proven by exact MGF Chernoff analysis; reference implementation with 28-test suite and deterministic known-answer vectors.</div>
+      <div class="footer">
+        <span>RESEARCH DRAFT &mdash; NOT PEER-REVIEWED &mdash; DO NOT DEPLOY</span>
+        <span>VERSION 1.0 &middot; NOVEMBER 2026</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
