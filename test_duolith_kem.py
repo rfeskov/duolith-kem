@@ -54,7 +54,7 @@ check("bitpack/bitunpack widths", ok)
 # ---------------------------------------------------------------------------
 print("== 3. Compress/Decompress bounds ==")
 ok = True
-for q, d in ((7681, 11), (7681, 5), (65536, 15), (65536, 13), (65536, 12)):
+for q, d in ((7681, 12), (7681, 6), (65536, 15), (65536, 14), (65536, 13)):
     x = rng.integers(0, q, size=20000).astype(np.int64)
     y = dk.compress(x, q, d)
     assert y.min() >= 0 and y.max() < (1 << d)
@@ -77,6 +77,17 @@ for eta in (3, 8):
     var = eta / 2.0
     ok &= abs(v.var() - var) < 0.03 * var
 check("CBD mean/variance/support", ok)
+
+ok = True
+try:
+    dk.cbd_from_stream(b"\x00" * 16, 8, 64)   # 128 bits for 1024 needed
+    ok = False
+except ValueError:
+    pass
+check("CBD rejects a too-short stream", ok)
+
+# (with this guard, any under-sized noise stream -- like the old Wall-U E''
+# call -- raises inside encryption and fails the round-trip tests below)
 
 # ---------------------------------------------------------------------------
 print("== 5. Wall-level PKE round-trips (real parameters) ==")

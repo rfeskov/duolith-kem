@@ -109,43 +109,9 @@ def compression_err_pmf(q, d) -> PMF:
 def mgf_log(p: PMF, lam):
     """log E[exp(lam * X)] for PMF p (numpy-vectorised, log domain)."""
     x = np.arange(p.lo, p.lo + len(p.pmf))
-    m = np.max(p.pmf * x * lam) if False else 0.0
     lg = np.log(np.maximum(p.pmf, 1e-300)) + lam * x
     m = lg.max()
     return m + np.log(np.exp(lg - m).sum())
-
-
-def chernoff_two_sided(mgf_terms, thr):
-    """Rigorous bound: P[|err| >= thr] <= 2 * inf_lam exp(-lam*thr)*M(lam).
-
-    mgf_terms: list of (log-MGF function, multiplicity) pairs; the total MGF
-    is the product.
-    """
-    def total_log_mgf(lam):
-        return sum(k * f(lam) for f, k in mgf_terms)
-
-    def one_sided(sign):
-        def obj(lam):
-            return -lam * thr + total_log_mgf(sign * lam)
-        # golden-section search over lam in (1e-9, 30)
-        a, b = 1e-9, 30.0
-        gr = (np.sqrt(5) - 1) / 2
-        c, d = b - gr * (b - a), a + gr * (b - a)
-        for _ in range(200):
-            if obj(c) < obj(d):
-                b = d
-            else:
-                a = c
-            c, d = b - gr * (b - a), a + gr * (b - a)
-        lam = 0.5 * (a + b)
-        return obj(lam), lam
-
-    lp, lam_p = one_sided(+1)
-    ln, lam_n = one_sided(-1)
-    # P[|err|>=thr] = P[err>=thr] + P[err<=-thr]; each bounded by its Chernoff bound
-    log_p = max(lp, ln) + np.log(np.exp(min(lp - max(lp, ln), 0))
-                                 + np.exp(min(ln - max(lp, ln), 0)))
-    return np.exp(log_p) / np.log(2) * -1.0, lam_p, lam_n   # returns log2 magnitude
 
 
 def chernoff_log2(mgf_terms, thr):
@@ -217,7 +183,6 @@ def wall_s_terms(p):
     du = compression_err_pmf(q, p["duS"])
     dv = compression_err_pmf(q, p["dvS"])
     sdu = product_pmf(cbd, du)
-    mgf = [(lambda pp: (lambda lam: mgf_log(pp, lam)))(prod, ), ]  # placeholder
     return dict(cbd=cbd, prod=prod, du=du, dv=dv, sdu=sdu, n=n, k=k, q=q)
 
 

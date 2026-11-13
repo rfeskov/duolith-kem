@@ -25,12 +25,14 @@ mechanism (KEM).  Its two independent computational walls are:
   random as long as AT LEAST ONE of m_S, m_U stays hidden, i.e. as long as at
   least one wall holds (a security OR-combiner; the two walls are algebraically
   heterogeneous on purpose: a hypothetical structural break of cyclotomic
-  Module-LWE does not transfer to unstructured LWE, and vice versa).
+  Module-LWE does not transfer to unstructured LWE.  The hedge is one-way:
+  Module-LWE is a special case of LWE, so a generic improvement against plain
+  LWE, or in lattice reduction, would affect both walls).
 
   IND-CCA2 security is obtained with the implicit-rejection Fujisaki-Okamoto
   transform of Hofheinz-Hoevelmanns-Kiltz (eprint 2017/604): decapsulation
   re-encrypts the recovered messages with randomness derived from the
-  recovered message and H(ct); on any mismatch a pseudorandom rejection key
+  recovered message and H(pk); on any mismatch a pseudorandom rejection key
   K = SHA3-256("DUOLITH/REJECT/v1" || z || H(ct)) is returned.
 
 SERIALIZATION (all integers little-endian, bit-packed LSB-first):
@@ -38,9 +40,9 @@ SERIALIZATION (all integers little-endian, bit-packed LSB-first):
        pkS = seedS(32) || t_raw   (k*256 coefficients, 13 bits each, raw)
        pkU = seedU(32) || B_15    (n*8 entries, 15-bit compressed)
   ct = ctS || ctU
-       ctS = u_11 (k*256 coefficients, 11-bit compressed)
-             || v_5  (256 coefficients, 5-bit compressed)
-       ctU = U_13 (n*8 entries, 13-bit compressed) || C_12 (8*8 entries, 12-bit)
+       ctS = u_12 (k*256 coefficients, 12-bit compressed)
+             || v_6  (256 coefficients, 6-bit compressed)
+       ctU = U_14 (n*8 entries, 14-bit compressed) || C_13 (8*8 entries, 13-bit)
   sk = seedS(32) || skSeedS(32) || seedU(32) || skSeedU(32) || z(32)  (160 bytes)
 
 The full message m_S (32 bytes) is encoded one bit per coefficient of v
@@ -185,6 +187,11 @@ def cbd_from_stream(stream: bytes, eta: int, count: int) -> np.ndarray:
     sum(b_{2i} - b_{2i+1}).  Result in [-eta, eta], dtype int64.
     """
     need = 2 * eta * count
+    # np.unpackbits silently zero-pads when count exceeds the available bits,
+    # which would turn missing randomness into zero coefficients.  Refuse.
+    if 8 * len(stream) < need:
+        raise ValueError("CBD stream too short: %d bits for %d needed"
+                         % (8 * len(stream), need))
     bits = np.unpackbits(np.frombuffer(stream, dtype=np.uint8),
                          bitorder="little", count=need).astype(np.int64)
     pairs = bits.reshape(count, 2 * eta)
@@ -396,7 +403,7 @@ def _wall_u_encrypt_pke(pkU: bytes, m: bytes, coins: bytes, p: dict):
     for c in range(t):
         Spr[:, c] = cbd_from_stream(_prf_noise(coins, DOM_ENC_U, c, nb), eta, n)
         Epr[:, c] = cbd_from_stream(_prf_noise(coins, DOM_ENC_U, t + c, nb), eta, n)
-    E2 = cbd_from_stream(_prf_noise(coins, DOM_ENC_U, 2 * t, 2 * t * t // 8),
+    E2 = cbd_from_stream(_prf_noise(coins, DOM_ENC_U, 2 * t, 2 * eta * t * t // 8),
                          eta, t * t).reshape(t, t)
     U = (A.T @ Spr + Epr) % q                       # n x t
     M = _encode_mU(m, p)                            # t x t
